@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using MinimalAPI.Data.Context;
+using MinimalAPI.Data.DTO;
+using MinimalAPI.Data.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<YogaDb>(opt =>
@@ -22,33 +24,43 @@ if (app.Environment.IsDevelopment())
 
 
 app.MapGet("/poses", async (YogaDb db) =>
-    await db.Poses.ToListAsync());
+    await db.Poses.Select(x => new PoseDTO(x)).ToListAsync());
 
 app.MapGet("/poses/beginner", async (YogaDb db) =>
-    await db.Poses.Where(t => t.IsBeginnerFriendly).ToListAsync());
+    await db.Poses.Where(t => t.IsBeginnerFriendly)
+             .Select(x => new PoseDTO(x)).ToListAsync());
 
 app.MapGet("/poses/{id}", async (int id, YogaDb db) =>
     await db.Poses.FindAsync(id)
         is Pose pose
-            ? Results.Ok(pose)
+            ? Results.Ok(new PoseDTO(pose))
             : Results.NotFound());
 
-app.MapPost("/poses", async (Pose pose, YogaDb db) =>
+app.MapPost("/poses", async (PoseDTO poseDTO, YogaDb db) =>
 {
+
+    var pose = new Pose
+    {
+        IsBeginnerFriendly = poseDTO.IsBeginnerFriendly,
+        Name = poseDTO.Name,
+        SanskritName = poseDTO.SanskritName
+    };
+
     db.Poses.Add(pose);
     await db.SaveChangesAsync();
 
-    return Results.Created($"/poses/{pose.Id}", pose);
+    return Results.Created($"/poses/{pose.Id}", new PoseDTO(pose));
 });
 
-app.MapPut("/poses/{id:int}",async (int id, Pose inputPose, YogaDb db) =>
+app.MapPut("/poses/{id:int}",async (int id, PoseDTO inputPoseDTO, YogaDb db) =>
 {
     var pose = await db.Poses.FindAsync(id);
 
     if (pose is null) return Results.NotFound();
 
-    pose.Name = inputPose.Name;
-    pose.IsBeginnerFriendly = inputPose.IsBeginnerFriendly;
+    pose.Name = inputPoseDTO.Name;
+    pose.SanskritName = inputPoseDTO.SanskritName;
+    pose.IsBeginnerFriendly = inputPoseDTO.IsBeginnerFriendly;
 
     await db.SaveChangesAsync();
 
@@ -61,7 +73,7 @@ app.MapDelete("/poses/{id}", async (int id, YogaDb db) =>
     {
         db.Poses.Remove(pose);
         await db.SaveChangesAsync();
-        return Results.Ok(pose);
+        return Results.Ok(new PoseDTO(pose));
     }
 
     return Results.NotFound();
@@ -70,18 +82,5 @@ app.MapDelete("/poses/{id}", async (int id, YogaDb db) =>
 app.Run();
 
 
-class Pose
-{
-    public int Id { get; set; }
-    public string? Name { get; set; }
-    public string? SanskritName { get; set; }
-    public bool IsBeginnerFriendly { get; set; } = false;
-}
 
-class YogaDb : DbContext
-{
-    public YogaDb(DbContextOptions<YogaDb> options)
-        : base(options) { }
 
-    public DbSet<Pose> Poses=> Set<Pose>();
-}
