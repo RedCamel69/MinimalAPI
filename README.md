@@ -1,7 +1,7 @@
 # MinimalAPI
 Example .Net 6 Minimal API
 
-Simple app displaying core code for teh minimal api concept.
+Simple app displaying core code for the minimal api concept.
 
 Example JSON for posting via swagger / postman
 
@@ -14,4 +14,3 @@ Example JSON for posting via swagger / postman
   "name": "Mountain Pose",
   "sanskritName": "Tadasana",
   "isBeginnerFriendly": true
-}
