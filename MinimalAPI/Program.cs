@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MinimalAPI.Data.Context;
 using MinimalAPI.Data.DTO;
 using MinimalAPI.Data.Models;
+using System.Numerics;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<YogaDb>(opt =>
@@ -21,7 +22,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
+app.MapGet("/", () => "Hello from the Poses minimal API!");
 
 app.MapGet("/poses", async (YogaDb db) =>
     await db.Poses.Select(x => new PoseDTO(x)).ToListAsync());
@@ -78,9 +79,10 @@ app.MapDelete("/poses/{id}", async (int id, YogaDb db) =>
 
     return Results.NotFound();
 });
-
 app.Run();
 
-
-
+/*by default the Program.cs file is compiled into a private class Program,
+ * which can not be accessed by other projects. By adding this public partial class,
+ * the test project will get access to Program and lets you write tests against it.*/
+public partial class Program { }
 
