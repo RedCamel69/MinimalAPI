@@ -8,6 +8,7 @@ namespace MinimalAPI_Tests
         [Fact]
         public async Task TestRootEndpoint()
         {
+            //.Net 6 WAF is the best option for minimal API 'unit tests' - .Net 7 makes IResult available
             await using var application = new WebApplicationFactory<Program>();
             using var client = application.CreateClient();
 
